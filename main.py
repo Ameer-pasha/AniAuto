@@ -11,9 +11,28 @@ from datetime import datetime
 # Load environment variables
 load_dotenv()
 
+# Email Configuration
 MY_EMAIL = os.getenv("MY_EMAIL")
 PASS = os.getenv("PASS")
 TO_EMAIL = os.getenv("TO_EMAIL")
+
+# Website Configuration
+ANIME_SITE_URL = os.getenv("ANIME_SITE_URL", "https://hianime.my/")
+CONTENT_XPATH = os.getenv("CONTENT_XPATH", '//*[@id="content"]/div/div[1]/div[2]')
+
+# Browser Configuration
+USER_AGENT = os.getenv("USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
+# Email Configuration
+EMAIL_SUBJECT_PREFIX = os.getenv("EMAIL_SUBJECT_PREFIX", "🤖 AniAuto Updates")
+
+# Validate required environment variables
+required_vars = ["MY_EMAIL", "PASS", "TO_EMAIL"]
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    print(f"❌ Error: Missing required environment variables: {', '.join(missing_vars)}")
+    print("Please check your .env file and ensure all required variables are set.")
+    exit(1)
 
 # Setup Chrome - HEADLESS MODE (invisible browser)
 chrome_op = webdriver.ChromeOptions()
@@ -22,19 +41,19 @@ chrome_op.add_argument("--no-sandbox")
 chrome_op.add_argument("--disable-dev-shm-usage")
 chrome_op.add_argument("--disable-gpu")
 chrome_op.add_argument("--window-size=1920,1080")
-chrome_op.add_argument(
-    "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+chrome_op.add_argument(f"--user-agent={USER_AGENT}")
 
 print("🤖 Starting headless browser (invisible)...")
 driver = webdriver.Chrome(options=chrome_op)
 
 try:
-    print("🌐 Navigating to anime site...")
+    print("🌐 Navigating to anime site....")
     # Open anime site
-    driver.get("https://hianime.my/")
+    driver.get(ANIME_SITE_URL)
     print("✅ Page loaded successfully")
 
-    wa = driver.find_element(By.XPATH, value='//*[@id="content"]/div/div[1]/div[2]')
+    # Use configurable XPath
+    wa = driver.find_element(By.XPATH, value=CONTENT_XPATH)
     print("📊 Anime content found and extracted")
 
     # Extract text
@@ -286,7 +305,7 @@ try:
             <div class="footer">
                 <p>Happy watching! <span class="emoji">🍿</span><span class="emoji">✨</span></p>
                 <p style="font-size: 0.9em; color: #999; margin-top: 10px;">
-                    Delivered with ❤️ by your Headless Anime Tracker
+                    Delivered with ❤️ by your AniAuto Tracker
                 </p>
                 <p style="font-size: 0.8em; color: #bbb; margin-top: 5px;">
                     ⚡ Powered by invisible Chrome browser
@@ -298,15 +317,15 @@ try:
     """
 
     print("📧 Preparing email...")
-    # Create email (HTML)
+    # Create email (HTML) with configurable subject
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"🤖 Headless Anime Updates - {current_date} ({len(df)} Episodes)"
+    msg["Subject"] = f"{EMAIL_SUBJECT_PREFIX} - {current_date} ({len(df)} Episodes)"
     msg["From"] = MY_EMAIL
     msg["To"] = TO_EMAIL
 
     # Add some email headers for better deliverability
     msg["X-Priority"] = "3"
-    msg["X-Mailer"] = "Headless Anime Updates Bot"
+    msg["X-Mailer"] = "AniAuto Bot"
 
     msg.attach(MIMEText(html_content, "html", "utf-8"))
 
@@ -322,12 +341,9 @@ try:
 except Exception as e:
     print(f"❌ Error occurred: {e}")
     import traceback
-
     traceback.print_exc()
 
 finally:
     print("🔒 Closing headless browser...")
     driver.quit()
     print("✅ Script completed!")
-
-
