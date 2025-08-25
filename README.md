@@ -230,4 +230,4 @@ Having issues? Check these resources:
 
 ---
 
-**Made with ❤️ and invisible browsers** 🤖✨"# AniAuto" 
+**Made with ❤️ and invisible browsers** 🤖"# AniAuto" 
